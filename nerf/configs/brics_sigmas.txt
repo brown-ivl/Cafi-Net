@@ -1,17 +1,17 @@
-expname = brics_chair_clean_code_test
-basedir = ./brics_logs/clean_code
-datadir = /home/ubuntu/efs/brics-simulator/renderings/shapenet/chair/03001627_1b6c268811e1724ead75d368738e0b47/
+expname = brics_chair_03001627_1b6c268811e1724ead75d368738e0b47
+basedir = ./logs
+datadir = ./dataset/chair/03001627_1b6c268811e1724ead75d368738e0b47/
 dataset_type = brics 
 testskip = 1
 max_ind = 54
 
 multi_scene = False
-root_dir = ./brics_logs/car/
+root_dir = ./logs/
 render_only = True
 gen_sigmas = True
 
 no_batching = True
-ft_path = /home/ubuntu/efs/nerf-pytorch/brics_logs/clean_code/brics_chair_clean_code_test/009600.tar
+ft_path = ./logs/brics_chair_03001627_1b6c268811e1724ead75d368738e0b47/048000.tar
 
 use_viewdirs = True
 white_bkgd = True
@@ -26,7 +26,7 @@ lrate = 0.0001
 
 precrop_iters = 480
 precrop_frac = 0.5
-iters = 9600
+iters = 48000
 
 x_range = [-2.5, 2.5]
 y_range = [-3.0, 2.0]
