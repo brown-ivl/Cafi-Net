@@ -62,6 +62,7 @@ Note that you can give a base directory containing multiple trained NeRF models 
 
 ## Generating Density Fields from NeRF Models
 1. In "configs/brics_canonical.txt", if "multi_scene" is True, appropriately set the "root_dir", otherwise set the "ft_path", "basedir" and "expname" appropriately. In both cases, set the "datadir" to the appropriate path containing the poses information, set the "category" and set the "canonical_path" to the appropriate path containing the canonical rotation information.
+2. Run the following code:
 ```
 python run_nerf.py --config configs/brics_canonical.txt
 ```
