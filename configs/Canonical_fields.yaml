@@ -1,0 +1,118 @@
+
+model:
+  file: "Cafi_model"
+  type: "Cafi_model"
+  args:
+    num_capsules: 10 
+    num_frames: 5 
+    sphere_samples: 64 
+    bn_momentum: 0.75
+    mlp_units: [[32, 32], [64, 64], [128, 256]]
+    radius: [0.4, 0.6, 0.8]
+
+        #file: "gated_block"
+        #type: "SE3Net"
+        #args:
+        #smooth_stride: True
+
+
+
+trainer_file:
+  file: "Canonical_fields_trainer"
+  type: "Canonical_fields_trainer"
+optimizer:
+  type: Adam
+  args:
+    lr: 6e-4
+
+
+loss:
+  l2_loss: 2.0
+  orth_loss: 1.0
+  separation_loss: 0.2
+  chamfer_loss: 1.0
+  
+
+trainer:
+  gpus: -1
+  strategy: "dp"
+  accumulate_grad_batches: 1
+  profiler: False
+  max_epochs: 500
+
+save:
+  path: "./checkpoints"
+utils:
+  eps: 1e-8
+  seed: 1234
+
+
+scheduler:
+  type: CosineAnnealingLR
+  args:
+    T_max : 500
+    eta_min : 1e-3
+
+dataset:
+  
+  file: "density_dataset"
+  type: "Density_loader_shapenet"
+  args:
+          dataset_path: "/scratch/ragaram/res_32/car/train/"
+          sigmas_file_pattern: "**_sigmas*.npy"
+  loader:
+    args:
+      batch_size: 8 
+      num_workers: 10
+      
+val_dataset:
+  
+  file: "density_dataset"
+  type: "Density_loader_shapenet"
+  args:
+          dataset_path: "/scratch/ragaram/res_32/car/val/"
+          sigmas_file_pattern: "**_sigmas*.npy" #"**_sigmas*.npy" 
+  loader:
+    args:
+      batch_size: 8
+      num_workers: 10
+
+feature:
+  rotation:
+    use: True
+  partiality:
+    use: False
+  scale:
+    use: False
+
+callback:
+  model_checkpoint:
+    segmentation:
+      # type: pl.callbacks.ModelCheckpoint
+      args:
+        filename: "model-{epoch}-{l2_loss:.4f}-Cafinet"
+        monitor: "l2_loss"
+        mode: "min"
+        verbose: True
+        dirpath: "./checkpoints"
+        save_top_k: 1
+        save_last: True
+
+test:
+  weights: "" 
+  max_iter: 
+  save_directory: "./pointclouds"
+  skip: 10
+
+test_args:
+  rotation_file: "/home2/ragaram/rotation_file/rotations.h5"
+  category_name: "chair"
+ 
+logging:
+  type: "WandbLogger"
+  project: "Cafinet"
+  args:
+    on_epoch: True 
+    prog_bar: True
+    logger: True
+    on_step: True
