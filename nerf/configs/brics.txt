@@ -1,0 +1,29 @@
+expname = brics_chair_clean_code_test
+basedir = ./brics_logs/clean_code
+datadir = /home/ubuntu/efs/brics-simulator/renderings/shapenet/chair/03001627_1b6c268811e1724ead75d368738e0b47/
+dataset_type = brics 
+testskip = 1
+max_ind = 54
+
+no_batching = True
+
+use_viewdirs = True
+white_bkgd = True
+lrate_decay = 500
+
+N_samples = 64
+N_importance = 128
+near = 0.1
+far = 20.0
+N_rand = 1024
+lrate = 0.0001
+
+precrop_iters = 480
+precrop_frac = 0.5
+iters = 9600
+
+res = 1
+wand_en = True
+i_print = 48
+i_img = 48
+i_weights = 960

@@ -1,0 +1,39 @@
+expname = brics_chair_clean_code_test
+basedir = ./brics_logs/car
+datadir = /home/ubuntu/efs/brics-simulator/renderings/shapenet/chair/03001627_1b6c268811e1724ead75d368738e0b47/
+dataset_type = brics
+testskip = 1
+max_ind = 54
+
+multi_scene = True
+root_dir = brics_logs/lamp/
+render_only = True
+canonical_path = /home/ubuntu/efs/rots/lamp_train_rots/
+category = lamp
+num_render_poses = 100
+
+no_batching = True
+ft_path = /home2/shaurya.dewan/NOCs/nerf-pytorch/brics_logs/chair/brics_chair_03001627_55192bc667582ebb83d21872be197422_vanilla/019200.tar
+
+use_viewdirs = True
+white_bkgd = True
+lrate_decay = 500
+
+N_samples = 64
+N_importance = 128
+near = 0.1
+far = 20.0
+N_rand = 1024
+lrate = 0.0001
+
+precrop_iters = 480
+precrop_frac = 0.5
+iters = 9600
+
+x_range = [-2.5, 2.5]
+y_range = [-3.0, 2.0]
+z_range = [2.0, 7.0]
+sigma_threshold = 2.0
+
+res = 1.0
+wand_en = False
