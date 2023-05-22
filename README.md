@@ -1,4 +1,7 @@
 # Canonical Fields: Self-Supervised Learning of Pose-Canonicalized Neural Fields
+
+*[Rohith Agaram](https://scholar.google.com/citations?user=Ni6qG7wAAAAJ), [Shaurya Dewan](https://scholar.google.com/citations?user=1FLYpxAAAAAJ), [Rahul Sajnani](https://scholar.google.com/citations?user=HAtfBjoAAAAJ&hl=en&oi=ao), [Adrien Poulenard](https://scholar.google.com/citations?hl=en&user=zsGbyGYAAAAJ), [Madhava Krishna](https://scholar.google.com/citations?user=QDuPGHwAAAAJ), [Srinath Sridhar](https://cs.brown.edu/people/ssrinath/)*
+
 [CVPR 2023] This is the official PyTorch implementation of CaFi-Net as proposed in the paper [here](https://arxiv.org/abs/2212.02493).
 
 ## Abstract
