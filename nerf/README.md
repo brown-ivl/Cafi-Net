@@ -17,18 +17,19 @@ conda env create -f environment.yml
 conda activate nerf
 ```
 
-## Dataset
-Download the 1300 rendered objects/scenes dataset [here]().
-```
-# Create dataset directory
-mkdir dataset
-# Change directory
-cd dataset
-# Download dataset
-wget 
-# Unzip dataset
-unzip final_res_32.zip
-```
+<!--Dataset Coming Soon-->
+<!--## Dataset-->
+<!--Download the 1300 rendered objects/scenes dataset [here]().-->
+<!--```-->
+<!--# Create dataset directory-->
+<!--mkdir dataset-->
+<!--# Change directory-->
+<!--cd dataset-->
+<!--# Download dataset-->
+<!--wget -->
+<!--# Unzip dataset-->
+<!--unzip -->
+<!--```-->
 
 ## Training NeRF
 1. Change the "datadir" appropriately in "configs/brics.txt".
