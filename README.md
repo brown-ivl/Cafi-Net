@@ -1,10 +1,15 @@
 # Canonical Fields: Self-Supervised Learning of Pose-Canonicalized Neural Fields
-[CVPR 2023 (Highlight)] This is the official PyTorch implementation of CaFi-Net as proposed in the paper [here](https://arxiv.org/abs/2212.02493).
+
+*[Rohith Agaram](https://scholar.google.com/citations?user=Ni6qG7wAAAAJ), [Shaurya Dewan](https://scholar.google.com/citations?user=1FLYpxAAAAAJ), [Rahul Sajnani](https://scholar.google.com/citations?user=HAtfBjoAAAAJ&hl=en&oi=ao), [Adrien Poulenard](https://scholar.google.com/citations?hl=en&user=zsGbyGYAAAAJ), [Madhava Krishna](https://scholar.google.com/citations?user=QDuPGHwAAAAJ), [Srinath Sridhar](https://cs.brown.edu/people/ssrinath/)*
+
+[CVPR 2023] This is the official PyTorch implementation of CaFi-Net as proposed in the paper [here](https://arxiv.org/abs/2212.02493).
+
+https://github.com/brown-ivl/Cafi-Net/assets/56212873/00178eaa-acb4-4755-b1d6-ec95a532225a
 
 ## Abstract
 Coordinate-based implicit neural networks, or neural fields, have emerged as useful representations of shape and appearance in 3D computer vision. Despite advances, however, it remains challenging to build neural fields for categories of objects without datasets like ShapeNet that provide "canonicalized" object instances that are consistently aligned for their 3D position and orientation (pose). We present Canonical Field Network (CaFi-Net), a self-supervised method to canonicalize the 3D pose of instances from an object category represented as neural fields, specifically neural radiance fields (NeRFs). CaFi-Net directly learns from continuous and noisy radiance fields using a Siamese network architecture that is designed to extract equivariant field features for category-level canonicalization. During inference, our method takes pre-trained neural radiance fields of novel object instances at arbitrary 3D pose and estimates a canonical field with consistent 3D pose across the entire category. Extensive experiments on a new dataset of 1300 NeRF models across 13 object categories show that our method matches or exceeds the performance of 3D point cloud-based methods.
 
-https://github.com/brown-ivl/Cafi-Net/assets/56212873/00178eaa-acb4-4755-b1d6-ec95a532225a
+
 
 ## Dataset
 Download the 1300 NeRF density fields dataset [here](https://nerf-fields.s3.amazonaws.com/final_fields/final_res_32.zip).
