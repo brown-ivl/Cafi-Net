@@ -71,9 +71,9 @@ for file in os.listdir(args.input_dir):
     if "_sigmas_%d.npy" % (args.res) not in file:
         continue
 
-    sigmas_path = os.path.join(input_dir, file)
+    sigmas_path = os.path.join(args.input_dir, file)
     samples_file = file.replace("sigmas", "samples")
-    samples_path = os.path.join(input_dir, samples_file)
+    samples_path = os.path.join(args.input_dir, samples_file)
 
     density = np.load(sigmas_path)
     coords = np.load(samples_path)
