@@ -10,12 +10,6 @@ model:
     mlp_units: [[32, 32], [64, 64], [128, 256]]
     radius: [0.4, 0.6, 0.8]
 
-        #file: "gated_block"
-        #type: "SE3Net"
-        #args:
-        #smooth_stride: True
-
-
 
 trainer_file:
   file: "Canonical_fields_trainer"
@@ -31,14 +25,16 @@ loss:
   orth_loss: 1.0
   separation_loss: 0.2
   chamfer_loss: 1.0
-  
+  rotation_loss: 0.0
+  surface_loss: 0.0
+  iou_loss: 1.0
 
 trainer:
   gpus: -1
   strategy: "dp"
   accumulate_grad_batches: 1
   profiler: False
-  max_epochs: 500
+  max_epochs: 200
 
 save:
   path: "./checkpoints"
@@ -47,10 +43,11 @@ utils:
   seed: 1234
 
 
+
 scheduler:
   type: CosineAnnealingLR
   args:
-    T_max : 500
+    T_max : 200
     eta_min : 1e-3
 
 dataset:
@@ -58,11 +55,11 @@ dataset:
   file: "density_dataset"
   type: "Density_loader_shapenet"
   args:
-          dataset_path: "/scratch/ragaram/res_32/car/train/"
+          dataset_path: "/scratch/ragaram/res_32/car/train/" 
           sigmas_file_pattern: "**_sigmas*.npy"
   loader:
     args:
-      batch_size: 8 
+      batch_size: 2
       num_workers: 10
       
 val_dataset:
@@ -70,11 +67,11 @@ val_dataset:
   file: "density_dataset"
   type: "Density_loader_shapenet"
   args:
-          dataset_path: "/scratch/ragaram/res_32/car/val/"
-          sigmas_file_pattern: "**_sigmas*.npy" #"**_sigmas*.npy" 
+          dataset_path: "/scratch/ragaram/res_32/car/val/" 
+          sigmas_file_pattern: "**_sigmas*.npy" 
   loader:
     args:
-      batch_size: 8
+      batch_size: 2
       num_workers: 10
 
 feature:
@@ -99,14 +96,14 @@ callback:
         save_last: True
 
 test:
-  weights: "" 
+  weights: ""
   max_iter: 
   save_directory: "./pointclouds"
   skip: 10
 
 test_args:
   rotation_file: "/home2/ragaram/rotation_file/rotations.h5"
-  category_name: "chair"
+  category_name: "car"
  
 logging:
   type: "WandbLogger"

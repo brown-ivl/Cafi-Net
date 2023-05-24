@@ -1,5 +1,3 @@
-import sys
-
 import torch
 from utils.group_points import GroupPoints
 from spherical_harmonics.spherical_cnn import torch_fibonnacci_sphere_sampling, SphericalHarmonicsEval, SphericalHarmonicsCoeffs
@@ -13,9 +11,6 @@ from e3nn import o3
 from utils.train_utils import mean_center
 from spherical_harmonics.clebsch_gordan_decomposition import torch_clebsch_gordan_decomposition
 import open3d as o3d
-
-
-
 
 class TFN_grid_density(torch.nn.Module):
     """
@@ -41,13 +36,13 @@ class TFN_grid_density(torch.nn.Module):
         self.spacing = [0, 0, 0]
         self.equivariant_units = [32, 64, 128]
         self.in_equivariant_channels = [[6, 13, 12, 9], [387, 874, 1065, 966], [771, 1738, 2121, 1926]]
-       
+
         
         self.mlp_units =  mlp_units
         self.in_mlp_units = [32, 64, 128]
         self.bn_momentum = bn_momentum
 
-        
+        self.grouping_layers = []
         self.grouping_layers_e = []
         self.kernel_layers = []
         self.conv_layers = []
@@ -55,13 +50,14 @@ class TFN_grid_density(torch.nn.Module):
         self.coeffs = []
 
         for i in range(len(self.radius)):
-           
-           
+            gi = GroupPoints_density(radius=self.radius[i],
+                             patch_size_source=self.patch_size[i],
+                             spacing_source=self.spacing[i])
             
             gi_e = GroupPoints_euclidean_density(radius=self.radius[i],
                              patch_size_source=self.patch_size[i],
                              spacing_source=self.spacing[i])
-            
+            self.grouping_layers.append(gi)
             self.grouping_layers_e.append(gi_e)
             
 
@@ -129,7 +125,6 @@ class TFN_grid_density(torch.nn.Module):
         points = []
         density = []
         for i in range(len(points_)):
-           
             pi = points_[i]
             di = density_[i]            
             B, H, W, D, _ = pi.shape
@@ -143,12 +138,14 @@ class TFN_grid_density(torch.nn.Module):
         weighted_density = []
         for i in range(len(self.radius)):
             
-           
+            # Finding nearest neighbors of each point to compute graph features
+            
+            
             gi = self.grouping_layers_e[i]({"source points": points[i], "target points": points[i + 1], "source density": density[i], "target density": density[i + 1]})
             weighted_density.append(gi['weighted density'])
             B, H, W, D, K, _ = gi["patches source"].shape
 
-            
+            # Computing kernels for patch neighbors
             ki = self.kernel_layers[i]({"patches": gi["patches source"].reshape(B, H*W*D, K, 3), "patches dist": gi["patches dist source"].reshape(B, H*W*D, K)})
             
 
@@ -162,9 +159,12 @@ class TFN_grid_density(torch.nn.Module):
         ki = ki.squeeze(0)
         ki = ki.squeeze(-1)
         dim_start = 0
-       
         
-
+        
+        
+        
+        
+        ones_singal =torch.ones((points[0].shape[0], points[0].shape[1], 1, 1)).type_as(x_grid).reshape(-1)
         ones_singal  = density[0].reshape(-1)
         y = {'0': ones_singal.reshape(points[0].shape[0], points[0].shape[1], 1, 1).type_as(x_grid)}
         for i in range(len(self.radius)):
@@ -180,23 +180,21 @@ class TFN_grid_density(torch.nn.Module):
             
             
             shape_ = density_[i].shape
-         
+            
+            
+            
             gradient_density_signal_int = get_gradient_density(density[i].reshape(shape_[0],shape_[1],shape_[2],shape_[3]))
             gradient_density_signal     = gradient_density_signal_int.permute(0,2,3,4,1).reshape(shape_[0],-1,3,1)
             
-            gradeint_density_signal_x  =  get_gradient_density( gradient_density_signal_int[:,0,...]).permute(0,2,3,4,1).reshape(shape_[0],-1,3,1)
             
-           
             if '1' in y:
                 y['1'] = torch.cat([y['1'], gradient_density_signal], dim=-1)
             else:
                 y['1'] =  gradient_density_signal
+                 
             
-                
-         
             y = self.conv_layers[i](y)
             
-            #return y
             shape_ = density_[i+1].shape
             
             gradient_density_signal_int_1 = get_gradient_density(density[i+1].reshape(shape_[0],shape_[1],shape_[2],shape_[3]))
@@ -204,13 +202,13 @@ class TFN_grid_density(torch.nn.Module):
             
             
             
+            
+            
             if '1' in y:
                 y['1'] = torch.cat([y['1'],  gradient_density_signal_1], dim=-1)
             else:
                 y['1'] =  gradient_density_signal_1
-            
                 
-          
             
             
             for key in y.keys():
@@ -218,12 +216,10 @@ class TFN_grid_density(torch.nn.Module):
                     y[key] = y[key]* density[i+1].unsqueeze(-1)
             
             
-          
-
+            
             y = apply_layers(y, self.equivariant_weights[i]) # B, d, 2*l + 1, C
             
 
-           
             y = self.iSHT[i].compute(y)
             y = y.permute(0, 3, 1, 2)
             y = self.bn[i](y)
@@ -232,11 +228,177 @@ class TFN_grid_density(torch.nn.Module):
             y = self.mlp[i](y)
             
             if i < len(self.radius) - 1:
-                # Spherical Harmonic Transform
                 y = self.fSHT[i].compute(y)
-               
-       
+        
         
         F = torch.max(y, dim=1, keepdims=False).values # B, samples, feature_dim
 
         return F
+
+
+if __name__ == "__main__":
+    sdfPath = "/home2/aditya.sharm/brics_fields/res_64/plane/train/rotated_fields/02691156_807d735fb9860fd1c863ab010b80d9ed_64_8_sdf.npy"
+    ptsPath = "/home2/aditya.sharm/brics_fields/res_64/plane/train/rotated_fields/02691156_807d735fb9860fd1c863ab010b80d9ed_64_8_pts.npy"
+
+    sdf = np.load(sdfPath,allow_pickle=False)
+    coords = np.load(ptsPath,allow_pickle=False)
+    
+    scale_factor = (coords.max())
+    coords = coords / scale_factor
+    
+    x_in = torch.from_numpy(coords)
+    x_density = torch.from_numpy(sdf)
+    
+    x = x_in
+    
+    
+    
+    x_density = x_density.to(torch.float64)
+    model = TFN_grid_density()
+    
+    type_features = model(x.unsqueeze(0).to(torch.float32), x_density.unsqueeze(0).to(torch.float32))
+    
+    print(type_features.shape) 
+    euler_angles_tensor = torch.tensor([2.0*0.785398,0,0])
+    
+    rot_mat = euler_rot_zyz(2.0*0.785398,0,0)
+    types= [1,2,3]
+    wigner_rot_dict = {}
+    print(rot_mat)
+    
+    
+    for type_ in types:
+        
+        wigner_rot = o3.wigner_D(type_, euler_angles_tensor[0], euler_angles_tensor[1], euler_angles_tensor[2])
+        wigner_rot = wigner_rot
+        print(wigner_rot)
+        wigner_rot_dict[str(type_)] = wigner_rot.to(torch.float64)
+        
+    
+    rotated_features_dict = {}
+    
+    for type_ in types:
+        rot_features = torch.matmul(wigner_rot_dict[str(type_)].to(torch.float32),type_features[str(type_)])
+        rotated_features_dict[str(type_)] = rot_features
+    
+    
+    rot_mat = torch.from_numpy(rot_mat)
+    rot_mat = rot_mat
+    rot_mat = rot_mat.type(torch.float32)
+    rot_mat = rot_mat.type_as(x_density)
+    
+    rot_mat = rot_mat.unsqueeze(0)
+    
+    un_rot_density_zyx = x_density.unsqueeze(0).unsqueeze(0)
+    un_rot_density_zyx = un_rot_density_zyx.permute(0,1,4,3,2)
+    
+    x_density_rot_zyx = rotate_density(torch.inverse(rot_mat), un_rot_density_zyx)
+    
+    x_density_rot_zyx = x_density_rot_zyx.squeeze(0)
+    x_density_rot_zyx = x_density_rot_zyx.squeeze(0)
+    x_density_rot = x_density_rot_zyx.permute(2,1,0)
+    
+    x_density_rot[x_density_rot >= 0.5] = 1
+    x_density_rot[x_density_rot < 0.5]  = 0
+    
+
+     
+    rot_type_features = model(x.unsqueeze(0).to(torch.float32), x_density_rot.unsqueeze(0).to(torch.float32))
+    
+    '''
+    for type_ in types:
+        rotated_features_dict[str(type_)] = torch.sum(rotated_features_dict[str(type_)],dim=-1)
+        rot_type_features[str(type_)] = torch.sum(rot_type_features[str(type_)],dim=-1)
+    '''
+    
+    
+    
+    
+    main_idx = 0
+    max_dist_list = []
+    
+    channels = [12,12,9]
+    
+    for type_ in types:
+        
+        for ch_dim in range(channels[type_-1]):
+            rot_feature = rot_type_features[str(type_)][:,:,:,ch_dim].squeeze(-1)
+            dim = (2*type_)+1
+            rot_feature = rot_feature.reshape(16,16,16,dim).unsqueeze(0).permute(0,4,3,2,1)
+            rot_feature_ = rotate_density(rot_mat, rot_feature).squeeze(0)
+            rot_sigma_feature_ = rot_feature_.permute(3,2,1,0).reshape(-1,dim)
+            rot_point_feature = rotated_features_dict[str(type_)][:,:,:,ch_dim].squeeze(-1).squeeze(0)
+            match = 0
+            un_match = 0
+            non_zero_features = 0
+            for index in range(rot_sigma_feature_.shape[0]):
+              if torch.count_nonzero(rot_sigma_feature_[index].type(torch.LongTensor)) > 0:
+                non_zero_features = non_zero_features + 1
+              else:
+                continue
+              if  torch.allclose(rot_sigma_feature_[index],rot_point_feature[index],atol=1e-04):
+                  match = match +1 
+              else:
+                  un_match = un_match + 1
+                
+            print("matched features for the type ", type_ ," = ",match)
+            #print("significant features for the type ", type_ ," = ",non_zero_features)
+        
+    '''  
+    for type_ in types:
+        rot_feature = rotated_features_dict[str(type_)]
+        rot_point_feature = rot_type_features[str(type_)]
+        
+        if  torch.allclose(rot_feature,rot_point_feature,atol=1e-03):
+            print("Equal for the feature type ",str(type_))
+            print("Differece max ",torch.max(torch.abs(rot_feature - rot_point_feature)))
+            print("Differece sum ",torch.sum(torch.abs(rot_feature - rot_point_feature)))
+            print("Differece min ",torch.min(torch.abs(rot_feature - rot_point_feature)))
+            print("Differece mean ",torch.mean(torch.abs(rot_feature - rot_point_feature)))
+            print("Differece median ",torch.median(torch.abs(rot_feature - rot_point_feature)))
+        else:
+            
+            print("Not Equal for the feature type ",str(type_))
+            print("Differece Norm ",torch.linalg.norm(torch.abs(rot_feature - rot_point_feature), dim=-1).max(),)
+            print("Differece max ",torch.max(torch.abs(rot_feature - rot_point_feature)))
+            print("Differece sum ",torch.sum(torch.abs(rot_feature - rot_point_feature)))
+            print("Differece min ",torch.min(torch.abs(rot_feature - rot_point_feature)))
+            print("Differece mean ",torch.mean(torch.abs(rot_feature - rot_point_feature)))
+            print("Differece median ",torch.median(torch.abs(rot_feature - rot_point_feature)))
+            print("Differece Mode ",torch.mode(torch.abs(rot_feature - rot_point_feature)))
+    
+    for type_ in types:
+        rot_feature = rotated_features_dict[str(type_)][:,:,:,5:6].squeeze(-1).squeeze(0)
+        rot_point_feature = rot_type_features[str(type_)]
+        match = 0
+        un_match = 0
+        for index in range(rot_feature.shape[0]):
+          
+          if  torch.allclose(rot_feature[index],rot_point_feature[index],atol=1e-03):
+              match = match +1 
+          else:
+              un_match = un_match + 1
+            
+        print("matched features for the type ", type_ ," = ",match)'''
+    
+    '''
+    main_idx = 0
+    for type_ in types:
+        rot_feature = rotated_features_dict[str(type_)].squeeze(0)
+        rot_point_feature = rot_type_features[str(type_)].squeeze(0)
+        
+        search_idx = []
+        for main_idx in range(rot_feature.shape[0]):
+            main_feature = rot_feature[:,:,0:1].squeeze(-1)[main_idx]
+            found = 0
+            for second_idx in range(rot_point_feature.shape[0]):
+                second_feature = rot_point_feature[second_idx]
+                if second_idx in search_idx:
+                    continue
+                if  torch.allclose(main_feature,second_feature,atol=1e-03):
+                    #print("Equal for the feature type  ",str(type_)," at the idx", main_idx)
+                    search_idx.append(second_idx)
+                    found = 1
+                    break
+            if not found:
+                print("Not Fo")'''

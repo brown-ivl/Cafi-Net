@@ -50,7 +50,7 @@ class Cafi_model(torch.nn.Module):
         self.zernike_harmonics = torch_zernike_monoms(self.l_max_out[-1])
         self.fSHT = SphericalHarmonicsCoeffs(l_max=self.l_max_out[-1], base=self.S2)
         self.type_1_basis = SphericalHarmonicsCoeffs(l_list=[1], base=self.S2)
-        
+
 
     def forward(self, x, x_density):
         """
@@ -66,6 +66,7 @@ class Cafi_model(torch.nn.Module):
 
 
         # Compute equivariant layers
+       
         for frame_num in range(self.num_frames):
             basis = self.basis_mlp[frame_num](F)
             basis = self.basis_layer[frame_num](basis)
@@ -81,7 +82,6 @@ class Cafi_model(torch.nn.Module):
         latent_code = self.code_layer(latent_code)
         latent_code = self.fSHT.compute(latent_code)
 
-        # z = zernike_monoms(x, self.l_max_out[-1])
         z = self.zernike_harmonics.compute(x)
 
         points_code = []
@@ -98,15 +98,16 @@ class Cafi_model(torch.nn.Module):
                 points_inv = p
 
         points_code = torch.cat(points_code, dim=-1)
-        inv_code = torch.max(points_code,dim=1).values
         points_inv = self.points_inv_layer(points_inv)
 
         if len(x_density_in.shape) == 4:
             x_density_in = x_density_in.unsqueeze(-1)
         
-       
         coords = points_inv.reshape(B, H, W, D, 3)
         points_inv = torch.nn.functional.grid_sample(x_density_in.permute(0, -1, 1, 2, 3), coords, align_corners=True).squeeze(1)
-        out = {"points_inv": points_inv, "E": E, "coords": coords ,"inv_code":inv_code}
+
+
+        out = {"points_inv": points_inv, "E": E, "coords": coords}
 
         return out
+

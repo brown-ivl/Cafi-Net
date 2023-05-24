@@ -2,20 +2,6 @@ from scipy.spatial.transform import Rotation
 import torch
 
 
-def compute_centroids(points, capsules):
-    return torch.einsum('bij,bic->bcj', points, capsules)
-    
-    
-def normalize_caps(caps, eps = 1e-8):
-
-    caps_sum = torch.sum(caps, dim = 1, keepdims = True)
-
-    # Normalizing capsules
-    normalized_caps = torch.divide(caps, caps_sum + eps)
-
-    return normalized_caps
-    
-    
 def random_rotate(x):
 
     """
