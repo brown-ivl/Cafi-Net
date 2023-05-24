@@ -16,6 +16,15 @@ conda activate Cafinet_torch
 
 Training and testing .
 
+#### Dataset
+```
+# Download dataset
+mkdir data
+cd data
+wget https://nerf-fields.s3.amazonaws.com/final_fields/final_res_32.zip
+# Unzip dataset
+unzip final_res_32.zip
+```
 #### Training
 
 1. In `configs/Canonical_fields.yaml` change the dataset path to the downloaded dataset.
@@ -46,3 +55,7 @@ CUDA_VISIBLE_DEVICES=0 python3 tester.py 'test.weights="<model_weights_path>"' '
 ```
 
 2. After running the test script you will find a new directory with stored pointclouds at location `outputs/<date_of_run_test>/<time_of_run_test>/pointclouds/`
+3. To visualize the pointcliuds use the below scrips
+```
+python vis_utis.py --base_path <path containg the pointclouds> --pcd <*pattern for the point coluds>
+```
