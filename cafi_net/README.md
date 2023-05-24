@@ -1,48 +1,48 @@
-# Canonical Fields: Self-Supervised Learning of Pose-Canonicalized Neural Fields
+# Training and Testing Cafinet 
 
-*[Rohith Agaram](https://scholar.google.com/citations?user=Ni6qG7wAAAAJ), [Shaurya Dewan](https://scholar.google.com/citations?user=1FLYpxAAAAAJ), [Rahul Sajnani](https://scholar.google.com/citations?user=HAtfBjoAAAAJ&hl=en&oi=ao), [Adrien Poulenard](https://scholar.google.com/citations?hl=en&user=zsGbyGYAAAAJ), [Madhava Krishna](https://scholar.google.com/citations?user=QDuPGHwAAAAJ), [Srinath Sridhar](https://cs.brown.edu/people/ssrinath/)*
-
-[CVPR 2023] This is the official PyTorch implementation of CaFi-Net as proposed in the paper [here](https://arxiv.org/abs/2212.02493).
-
-https://github.com/brown-ivl/Cafi-Net/assets/56212873/00178eaa-acb4-4755-b1d6-ec95a532225a
-
-## Abstract
-Coordinate-based implicit neural networks, or neural fields, have emerged as useful representations of shape and appearance in 3D computer vision. Despite advances, however, it remains challenging to build neural fields for categories of objects without datasets like ShapeNet that provide "canonicalized" object instances that are consistently aligned for their 3D position and orientation (pose). We present Canonical Field Network (CaFi-Net), a self-supervised method to canonicalize the 3D pose of instances from an object category represented as neural fields, specifically neural radiance fields (NeRFs). CaFi-Net directly learns from continuous and noisy radiance fields using a Siamese network architecture that is designed to extract equivariant field features for category-level canonicalization. During inference, our method takes pre-trained neural radiance fields of novel object instances at arbitrary 3D pose and estimates a canonical field with consistent 3D pose across the entire category. Extensive experiments on a new dataset of 1300 NeRF models across 13 object categories show that our method matches or exceeds the performance of 3D point cloud-based methods.
+This README contains instructions to train and test the Cafinent.
 
 
 
-## Dataset
-Download the 1300 NeRF density fields dataset [here](https://nerf-fields.s3.amazonaws.com/final_fields/final_res_32.zip).
-```
-# Create base dataset directory
-mkdir dataset
-# Create directory for density fields dataset
-mkdir dataset/nerf_fields
-# Change directory
-cd dataset/nerf_fields
-# Download dataset
-wget https://nerf-fields.s3.amazonaws.com/final_fields/final_res_32.zip
-# Unzip dataset
-unzip final_res_32.zip
+## Loading the environment
+
+Make sure you have Anaconda or Miniconda installed before you proceed to load this environment.
+
+```bash
+# Creating the conda environment and loading it
+conda env create -f environment.yml
+conda activate Cafinet_torch
 ```
 
-## NeRF
-Please find the PyTorch implementation of the NeRF codebase used for the generation of the dataset of 1300 NeRF density fields in the "nerf" folder. Instructions are provided in the README in the same folder.
+Training and testing .
 
-## CaFi-Net
-Please find the PyTorch implementation of CaFi-Net and its instructions in the "cafi_net" folder. This implementation is still under development.
+#### Training
 
-## Citation
+1. In `configs/Canonical_fields.yaml` change the dataset path to the downloaded dataset.
+
 ```
-@InProceedings{agaram2023_cafinet,
-author={Rohith Agaram and 
-        Shaurya Dewan and 
-        Rahul Sajnani and 
-        Adrien Poulenard and 
-        Madhava Krishna and 
-        Srinath Sridhar},
-title={Canonical Fields: Self-Supervised Learning of Pose-Canonicalized Neural Fields},
-booktitle = {The IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
-month = {June}
-year={2023}}
+# In configs/Canonical_fields.yaml
+dataset:
+  dataset_path: <change path to to training dataset>
+val_dataset:
+  dataset_path:: <change path to to validation dataset>
 ```
+
+2. Run the code below
+
+```bash
+# Run the code to train
+CUDA_VISIBLE_DEVICES=0 python main.py
+```
+
+#### Testing
+
+1. The test script tests the model on the validation set and saves the output as ply files for visualization.
+
+```bash
+# Test the trained model
+# weight files are stored at path outputs/<date_of_run_train>/<time_of_run_train>/checkpoints/ 
+CUDA_VISIBLE_DEVICES=0 python3 tester.py 'test.weights="<model_weights_path>"' 'test.skip=1'
+```
+
+2. After running the test script you will find a new directory with stored pointclouds at location `outputs/<date_of_run_test>/<time_of_run_test>/pointclouds/`
