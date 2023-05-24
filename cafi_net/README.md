@@ -55,7 +55,7 @@ CUDA_VISIBLE_DEVICES=0 python3 tester.py 'test.weights="<model_weights_path>"' '
 ```
 
 2. After running the test script you will find a new directory with stored pointclouds at location `outputs/<date_of_run_test>/<time_of_run_test>/pointclouds/`
-3. To visualize the pointcliuds use the below scrips
+3. To visualize the pointcliuds use the below script
 ```
 python vis_utis.py --base_path <path containg the pointclouds> --pcd <*pattern for the point coluds>
 ```
