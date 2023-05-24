@@ -30,7 +30,7 @@ unzip final_res_32.zip
 Please find the PyTorch implementation of the NeRF codebase used for the generation of the dataset of 1300 NeRF density fields in the "nerf" folder. Instructions are provided in the README in the same folder.
 
 ## CaFi-Net
-Please find the PyTorch implementation of CaFi-Net and its instructions in the "cafi_net" folder (./cafi_net). This implementation is still under development.
+Please find the PyTorch implementation of CaFi-Net and its instructions in the ["cafi_net" folder](./cafi_net). This implementation is still under development.
 
 ## Citation
 ```
