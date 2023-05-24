@@ -42,3 +42,5 @@ booktitle = {The IEEE Conference on Computer Vision and Pattern Recognition (CVP
 month = {June}
 year={2023}}
 ```
+## Acknowledgments
+we thank [condor](https://github.com/brown-ivl/ConDor) for providing the base code for building the cafi-net. The NeRF model is implemented based on [NeRF-pytorch](https://github.com/yenchenlin/nerf-pytorch).
