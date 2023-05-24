@@ -18,8 +18,7 @@ def run(cfg):
     print(os.getcwd())
     checkpoint_callback = ModelCheckpoint(**cfg.callback.model_checkpoint.segmentation.args)
     model = getattr(eval(cfg.trainer_file.file), cfg.trainer_file.type)(configs = cfg)
-    #trainer = Trainer(**cfg.trainer, callbacks = [checkpoint_callback], logger = train_logger)
-    trainer = Trainer(**cfg.trainer, callbacks = [checkpoint_callback])
+    trainer = Trainer(**cfg.trainer, callbacks = [checkpoint_callback], logger = train_logger)
     trainer.fit(model)
     
 
