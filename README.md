@@ -20,10 +20,6 @@ mkdir dataset
 mkdir dataset/nerf_fields
 # Change directory
 cd dataset/nerf_fields
-# Download dataset
-wget https://nerf-fields.s3.amazonaws.com/final_fields/final_res_32.zip
-# Unzip dataset
-unzip final_res_32.zip
 ```
 
 ## NeRF
