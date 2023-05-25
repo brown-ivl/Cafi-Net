@@ -61,7 +61,7 @@ python grad_vis.py --input_dir <insert path here>
 
 Note that you can give a base directory containing multiple trained NeRF models as well, the above command will visualize all the models' gradient fields.
 
-## Generating Density Fields from NeRF Models
+## Rendering NeRF Models from Canonical Frame
 1. In "configs/brics_canonical.txt", if "multi_scene" is True, appropriately set the "root_dir", otherwise set the "ft_path", "basedir" and "expname" appropriately. In both cases, set the "datadir" to the appropriate path containing the poses information, set the "category" and set the "canonical_path" to the appropriate path containing the canonical rotation information.
 2. Run the following code:
 ```
