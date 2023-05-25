@@ -16,10 +16,8 @@ def run(cfg):
     train_logger = eval(cfg.logging.type)(project = cfg.logging.project)
     log.info(cfg)
     print(os.getcwd())
-    checkpoint_callback = ModelCheckpoint(**cfg.callback.model_checkpoint.segmentation.args)
-    model = getattr(eval(cfg.trainer_file.file), cfg.trainer_file.type)(configs = cfg)
-    trainer = Trainer(**cfg.trainer, callbacks = [checkpoint_callback], logger = train_logger)
-    trainer.fit(model)
+    model = getattr(eval(cfg.trainer_file.file), cfg.trainer_file.type).load_from_checkpoint(os.path.join(hydra.utils.get_original_cwd(), cfg.test.weights)).eval().cuda()
+    model.run_canonica_render(cfg)
     
 
 if __name__ == '__main__':

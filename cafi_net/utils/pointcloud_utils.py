@@ -10,8 +10,6 @@ from sklearn.mixture import GaussianMixture
 from sklearn.cluster import KMeans
 
 
-
-
 def kron(a, b):
     """
     Kronecker product of matrices a and b with leading batch dimensions.
@@ -82,85 +80,40 @@ def convert_tensor_2_numpy(x):
     
     return out 
 
-def labels_to_pallette(labels):
-    
-    color_maps_tuple = sns.color_palette()
-    color_maps_tuple.insert(0,(1,1,1))
-    color_maps = []
-    
-     
-
-    for _ in color_maps_tuple:
-        x = _
-        color_maps.append(list(x))
-   
-    classes = {
-            0: color_maps[0], # White
-            1: color_maps[1],     # red
-            2: color_maps[2],     # green
-            3: color_maps[3],     # blue
-            4: color_maps[4],   # pink
-            5: color_maps[5],   # yellow
-            6: color_maps[6],# magenta
-            7: color_maps[7], # White
-            8: color_maps[8],     # red
-            9: color_maps[9],     # green
-            10: color_maps[10]     # blue
-    }
-    result = np.zeros((labels.shape[0],3))
-    for key, value in classes.items():
-            result[np.where(labels == key)] = value
-
-    return result
-    
-
-
-def generate_mask(density):
-    
-    density_int = density.cpu().numpy().reshape(-1,1)  # convert to numpy array
-    
+def save_density(x, filename = "./pointcloud.ply"):
+    density_int = x.cpu().numpy()
+    shape_ = density_int.shape 
+    density_int = density_int.reshape(-1,1)
+    mask_density_int = np.ones_like(density_int) * -1
+        
     model = KMeans(init="k-means++",n_clusters=2)
     model.fit(density_int)
     label = model.predict(density_int)
     clusters = np.unique(label)
+    
+    if np.mean(density_int[np.where(label == 1)[0]]) > np.mean(density_int[np.where(label == 0)[0]]):
+        fg_idx = np.where(label == 1)[0]
+        bg_idx = np.where(label == 0)[0]
 
-    zero_idx = np.where(label == 0)
-    ones_idx = np.where(label == 1)
-    
-    zero_mean = density_int[zero_idx].mean()
-    one_mean  = density_int[ones_idx].mean()
-    
-    
-    mask_density_int = np.ones_like(density_int) * -1
-    if one_mean >= zero_mean:
-      mask_density_int[ones_idx] = 1.
-      mask_density_int[zero_idx] = 0.
+
     else:
-      mask_density_int[ones_idx] = 0.
-      mask_density_int[zero_idx] = 1.
+        fg_idx = np.where(label == 0)[0]
+        bg_idx = np.where(label == 1)[0]
+
+    mask_density_int[fg_idx] = 1.
+    mask_density_int[bg_idx] = 0.
         
-
-    denisty_mask = torch.from_numpy(mask_density_int)
-    
-    return denisty_mask
-    
-def save_density(x, filename = "./pointcloud.ply",colors_file=None):
-
-    shape_ = x.shape
-    sdf_new = generate_mask(x)
-    sdf_new =  sdf_new.cpu().numpy().reshape(shape_)
+    mask_density_tensor = torch.from_numpy(mask_density_int)
+    mask_density_int = mask_density_int.reshape(shape_)
     sampling_grid = get_xyz_grid(x)
     sampling_grid_np = sampling_grid.detach().cpu().numpy()
- 
-   
-    pts = sampling_grid_np[sdf_new == 1, :]
-    
+    pts = sampling_grid_np[mask_density_int == 1., :]
     pcd = o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(pts)
     label_map = np.ones((pts.shape[0], 3)) * 0.5
     pcd.colors = o3d.utility.Vector3dVector(label_map)
     o3d.io.write_point_cloud(filename, pcd)
-    
+   
 
 
 def save_pointcloud(x, filename = "./pointcloud.ply"):
@@ -458,23 +411,7 @@ class GroupPoints_grid(torch.nn.Module):
 
         return y
 
-'''
-def get_gradient_density(x):
-    
-    # x - B, H, W, D
-    
-    B, H, W, D = x.shape   
-    data = x
-    
-    x_grad = torch.gradient(data, dim=3, edge_order=2)[0]
-    y_grad = torch.gradient(data, dim=2, edge_order=2)[0]
-    z_grad = torch.gradient(data, dim=1, edge_order=2)[0]
-    
-   
-    gradient = torch.stack([x_grad, y_grad, z_grad], 1)
 
-    return gradient # B, 3, H, W, D
-    '''
 
 def get_gradient_density(x):
     
@@ -527,8 +464,7 @@ class GroupPoints_density(torch.nn.Module):
             patches radius source - B, 1, 1
             patches dist source - B, N, K
         """
-        #import pdb
-        #pdb.set_trace()
+        
         assert isinstance(x, dict)
         source = x["source points"]
         target = x["target points"]
@@ -720,7 +656,7 @@ def compute_patches(source, target, sq_distance_mat, sq_distance_mat_sel, num_sa
     
     sq_patches_dist, patches_idx = torch.topk(-sq_distance_mat, k=num_samples * (spacing + 1))
     
-    B,N,_  = sq_distance_mat.shape
+    #B,N,_  = sq_distance_mat.shape
     
     #batch_idx         =  torch.arange(0,B).repeat(patches_idx.shape[-1],1).T.unsqueeze(1).repeat(1,N,1).to(torch.int64)
     #point_idx         = torch.arange(0,N).reshape(N,1).repeat(1,patches_idx.shape[-1]).unsqueeze(0).repeat(B,1,1).to(torch.int64)
@@ -782,7 +718,43 @@ def compute_patches(source, target, sq_distance_mat, sq_distance_mat_sel, num_sa
     
     return {"patches": patches, "patches idx": patches_idx, "patches size": patches_size, "patches radius": rad,
             "patches dist": patches_dist, "source_density":density, "weight_density":weight_density}
+
+
+
+def create_mask(density):
     
+    shape_ = density.shape
+    
+    B,H,W,D = density.shape
+    mask_density_list = []
+    for i in range(shape_[0]):
+        
+        density_int = density[i].cpu().numpy().reshape(-1,1)
+        mask_density_int = np.ones_like(density_int) * -1
+        
+        model = KMeans(init="k-means++",n_clusters=2)
+        model.fit(density_int)
+        label = model.predict(density_int)
+        clusters = np.unique(label)
+        
+        if np.mean(density_int[np.where(label == 1)[0]]) > np.mean(density_int[np.where(label == 0)[0]]):
+            fg_idx = np.where(label == 1)[0]
+            bg_idx = np.where(label == 0)[0]
+
+
+        else:
+            fg_idx = np.where(label == 0)[0]
+            bg_idx = np.where(label == 1)[0]
+
+        mask_density_int[fg_idx] = 1.
+        mask_density_int[bg_idx] = 0.
+            
+        mask_density_tensor = torch.from_numpy(mask_density_int)
+        mask_density_list.append(mask_density_tensor)
+    mask_density = torch.stack(mask_density_list).reshape(shape_)
+    return mask_density 
+
+
 class GroupPoints_euclidean_density(torch.nn.Module):
     def __init__(self, radius, patch_size_source, radius_target=None, patch_size_target=None,
                  spacing_source=0, spacing_target=0):

@@ -20,17 +20,13 @@ mkdir dataset
 mkdir dataset/nerf_fields
 # Change directory
 cd dataset/nerf_fields
-# Download dataset
-wget https://nerf-fields.s3.amazonaws.com/final_fields/final_res_32.zip
-# Unzip dataset
-unzip final_res_32.zip
 ```
 
 ## NeRF
 Please find the PyTorch implementation of the NeRF codebase used for the generation of the dataset of 1300 NeRF density fields in the "nerf" folder. Instructions are provided in the README in the same folder.
 
 ## CaFi-Net
-Please find the PyTorch implementation of CaFi-Net and its instructions in the "cafi_net" folder. This implementation is still under development.
+Please find the PyTorch implementation of CaFi-Net and its instructions in the [cafi_net](./cafi_net) folder. This implementation is still under development.
 
 ## Citation
 ```
@@ -46,3 +42,5 @@ booktitle = {The IEEE Conference on Computer Vision and Pattern Recognition (CVP
 month = {June}
 year={2023}}
 ```
+## Acknowledgments
+we thank [ConDor](https://github.com/brown-ivl/ConDor) for providing the base code for building the cafi-net. The NeRF model is implemented based on [NeRF-pytorch](https://github.com/yenchenlin/nerf-pytorch).
