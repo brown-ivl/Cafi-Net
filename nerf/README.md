@@ -17,19 +17,16 @@ conda env create -f environment.yml
 conda activate nerf
 ```
 
-<!--Dataset Coming Soon-->
-<!--## Dataset-->
-<!--Download the 1300 rendered objects/scenes dataset [here]().-->
-<!--```-->
-<!--# Create dataset directory-->
-<!--mkdir dataset-->
-<!--# Change directory-->
-<!--cd dataset-->
-<!--# Download dataset-->
-<!--wget -->
-<!--# Unzip dataset-->
-<!--unzip -->
-<!--```-->
+## Dataset
+Download the 1300 trained NeRF weights/models dataset from the below table:
+
+| Dataset                                   | Link                                                         | Size (GB) |
+| ----------------------------------------- | ------------------------------------------------------------ | --------- |
+| Part 1 (4 categories)  | [link](https://nerf-fields.s3.amazonaws.com/final_nerf_models_cleaned/part1.zip) | 9.0       |
+| Part 2 (4 categories)                            | [link](https://nerf-fields.s3.amazonaws.com/final_nerf_models_cleaned/part2.zip) | 9.6        |
+| Part 3 (5 categories)                          | [link](https://nerf-fields.s3.amazonaws.com/final_nerf_models_cleaned/part3.zip) | 10.7        |
+
+Note that we have divided the dataset into three parts where each part contains all the models for different categories. For most models we have included the weights after 200 epochs and 400 epochs of training. We are still working on releasing a few more of the missing models/instances for some of the categories so this is not the complete 1300 trained NeRF weights dataset but this release contains most of the models (1000+).
 
 ## Training NeRF
 1. Change the "datadir" appropriately in "configs/brics.txt".
